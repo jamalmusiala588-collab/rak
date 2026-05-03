@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Raktima Sengupta — Biotech Studio · Living Systems & Code</title>
+<meta name="description" content="Portfolio of Raktima Sengupta — biotechnologist building at the intersection of biology, sustainable materials, and digital systems." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EFEAE0;
+    --ink:#0E0F0C;
+    --ink-2:#2A2C26;
+    --muted:#7A7468;
+    --rule:#D6CFBE;
+    --paper:#F7F3E9;
+    --moss:#1F3D2B;
+    --moss-2:#3A6B48;
+    --acid:#C9F24D;
+    --rust:#C44A1A;
+    --plum:#5B2A4C;
+    --accent:var(--moss);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--bg); color:var(--ink); font-family:'Space Grotesk',system-ui,sans-serif; overflow-x:hidden}
+  body{cursor:none}
+  @media (pointer:coarse){ body{cursor:auto} }
+  a,button{color:inherit; text-decoration:none; background:none; border:none; font:inherit}
+  ::selection{background:var(--ink); color:var(--acid)}
+
+  /* GRAIN canvas */
+  #grain{position:fixed; inset:0; pointer-events:none; opacity:0.08; mix-blend-mode:multiply; z-index:1}
+  #blob{position:fixed; inset:0; pointer-events:none; z-index:0}
+
+  /* CURSOR */
+  #cur,#curRing{position:fixed; top:0; left:0; pointer-events:none; z-index:9999; border-radius:50%; transform:translate(-50%,-50%); mix-blend-mode:difference}
+  #cur{width:10px; height:10px; background:#fff; transition:width .25s, height .25s, background .25s}
+  #curRing{width:36px; height:36px; border:1px solid #fff; transition:width .3s, height .3s, border-color .3s}
+  body.hov #cur{width:0; height:0}
+  body.hov #curRing{width:64px; height:64px; border:2px solid var(--acid); mix-blend-mode:normal}
+  body.drag #curRing{width:80px; height:80px; border:1px dashed #fff}
+  @media (pointer:coarse){ #cur,#curRing{display:none} }
+
+  /* SCROLL PROGRESS */
+  #progress{position:fixed; top:0; left:0; height:2px; background:var(--ink); width:0; z-index:200; transition:width .1s linear}
+
+  /* NAV */
+  nav.top{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    padding:18px 28px; display:flex; align-items:center; justify-content:space-between;
+    mix-blend-mode:difference; color:#fff;
+  }
+  nav.top .mark{font-family:'Fraunces',serif; font-weight:300; font-style:italic; font-size:1.5rem; letter-spacing:-.02em}
+  nav.top .mark b{font-weight:700; font-style:normal}
+  nav.top .links{display:flex; gap:28px; font-family:'JetBrains Mono',monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.16em}
+  nav.top .links a{position:relative; padding:6px 0; opacity:0.7; transition:opacity .3s}
+  nav.top .links a:hover, nav.top .links a.active{opacity:1}
+  nav.top .links a.active::before{content:"→ "; color:var(--acid); mix-blend-mode:normal}
+  nav.top .clock{font-family:'JetBrains Mono',monospace; font-size:0.7rem; letter-spacing:0.1em; opacity:0.7}
+  @media (max-width:780px){ nav.top .links{display:none} nav.top .clock{display:none} }
+
+  /* SECTION wrapper */
+  section{position:relative; z-index:2; padding:140px 28px}
+  .wrap{max-width:1320px; margin:0 auto}
+  .mono{font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.18em; font-size:0.7rem; color:var(--muted)}
+  h1,h2,h3,h4{font-family:'Fraunces',serif; font-weight:300; letter-spacing:-.02em; line-height:1}
+
+  /* HERO */
+  .hero{min-height:100vh; padding-top:120px; display:flex; flex-direction:column; justify-content:space-between}
+  .hero-top{display:flex; justify-content:space-between; gap:40px; margin-bottom:60px; flex-wrap:wrap}
+  .hero-top .meta{max-width:280px; font-family:'JetBrains Mono',monospace; font-size:0.72rem; line-height:1.7; color:var(--ink-2)}
+  .hero-top .meta .dot{display:inline-block; width:8px; height:8px; background:var(--moss-2); border-radius:50%; margin-right:8px; animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1; transform:scale(1)} 50%{opacity:.4; transform:scale(.8)}}
+
+  .hero-name{font-family:'Fraunces',serif; font-weight:200; font-size:clamp(4rem, 16vw, 16rem); line-height:0.85; letter-spacing:-.04em; position:relative}
+  .hero-name .l1{display:block}
+  .hero-name .l2{display:block; font-style:italic; font-weight:300; padding-left:0.18em; color:var(--moss)}
+  .hero-name .l2 span{display:inline-block; transition:transform .4s cubic-bezier(.2,.9,.2,1.2), color .3s}
+  .hero-name .l2 span:hover{transform:translateY(-12px) rotate(-4deg); color:var(--rust)}
+
+  .hero-bottom{display:grid; grid-template-columns:1.2fr 1fr 1fr; gap:60px; align-items:end; margin-top:40px}
+  .hero-tag{font-family:'Fraunces',serif; font-style:italic; font-weight:300; font-size:clamp(1.2rem, 1.8vw, 1.6rem); line-height:1.4; max-width:32ch}
+  .hero-tag em{color:var(--moss); font-style:normal; border-bottom:1px solid var(--moss)}
+  .hero-info h5{font-family:'JetBrains Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.18em; color:var(--muted); margin-bottom:10px; font-weight:400}
+  .hero-info p{font-size:0.95rem; line-height:1.6}
+  .hero-info a{display:inline-block; position:relative}
+  .hero-info a::after{content:""; position:absolute; left:0; bottom:-2px; width:100%; height:1px; background:currentColor; transform:scaleX(0); transform-origin:right; transition:transform .4s cubic-bezier(.7,0,.3,1)}
+  .hero-info a:hover::after{transform:scaleX(1); transform-origin:left}
+  @media (max-width:880px){ .hero-bottom{grid-template-columns:1fr; gap:32px} }
+
+  /* MARQUEE */
+  .marquee{overflow:hidden; padding:28px 0; border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); white-space:nowrap; font-family:'Fraunces',serif; font-style:italic; font-size:clamp(2rem,5vw,4.5rem); font-weight:200; background:var(--ink); color:var(--paper)}
+  .marquee .track{display:inline-block; animation:scroll 32s linear infinite}
+  .marquee .track span{display:inline-block; padding:0 30px}
+  .marquee .track span::after{content:"✿"; color:var(--acid); font-style:normal; padding-left:60px}
+  @keyframes scroll{from{transform:translateX(0)} to{transform:translateX(-50%)}}
+
+  /* SECTION HEAD */
+  .sec-head{display:flex; align-items:flex-end; justify-content:space-between; gap:40px; margin-bottom:80px; padding-bottom:24px; border-bottom:1px solid var(--ink); flex-wrap:wrap}
+  .sec-head .num{font-family:'JetBrains Mono',monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.18em; color:var(--muted); margin-bottom:14px}
+  .sec-head h2{font-size:clamp(3rem,7vw,6rem); font-weight:200; letter-spacing:-.04em}
+  .sec-head h2 i{font-weight:300; color:var(--moss)}
+  .sec-head .desc{max-width:340px; font-size:0.9rem; color:var(--ink-2); line-height:1.6}
+
+  /* PROJECTS — horizontal drag scroller */
+  .proj-rail-wrap{position:relative}
+  .proj-hint{font-family:'JetBrains Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.18em; color:var(--muted); margin-bottom:20px; display:flex; justify-content:space-between; align-items:center}
+  .proj-hint .arrows{display:flex; gap:10px}
+  .proj-hint button{width:42px; height:42px; border:1px solid var(--ink); background:transparent; transition:background .3s, color .3s}
+  .proj-hint button:hover{background:var(--ink); color:var(--paper)}
+  .proj-rail{display:flex; gap:24px; overflow-x:auto; scroll-snap-type:x mandatory; padding:6px 0 30px; scrollbar-width:none; cursor:grab}
+  .proj-rail::-webkit-scrollbar{display:none}
+  .proj-rail.dragging{cursor:grabbing}
+  .proj-card{
+    flex:0 0 min(560px, 88vw);
+    scroll-snap-align:start;
+    background:var(--paper);
+    border:1px solid var(--ink);
+    padding:32px;
+    display:flex; flex-direction:column; gap:24px;
+    min-height:600px;
+    position:relative;
+    transition:transform .5s cubic-bezier(.2,.9,.2,1), background .4s, color .4s;
+  }
+  .proj-card:hover{transform:translateY(-8px)}
+  .proj-card[data-tone="moss"]:hover{background:var(--moss); color:var(--paper); border-color:var(--moss)}
+  .proj-card[data-tone="acid"]:hover{background:var(--acid); color:var(--ink)}
+  .proj-card[data-tone="rust"]:hover{background:var(--rust); color:var(--paper); border-color:var(--rust)}
+  .proj-card .pc-top{display:flex; justify-content:space-between; align-items:flex-start; font-family:'JetBrains Mono',monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.16em}
+  .proj-card .pc-num{opacity:.6}
+  .proj-card .pc-tag{border:1px solid currentColor; padding:5px 10px; opacity:.85}
+  .proj-card h3{font-family:'Fraunces',serif; font-size:clamp(1.6rem, 2.2vw, 2.2rem); font-weight:300; line-height:1.05; letter-spacing:-.02em}
+  .proj-card h3 em{font-style:italic; font-weight:400}
+  .proj-card .pc-desc{font-size:0.92rem; line-height:1.65; opacity:.85}
+  .proj-card .pc-meta{margin-top:auto; padding-top:24px; border-top:1px solid currentColor; display:grid; grid-template-columns:1fr 1fr; gap:18px; font-family:'JetBrains Mono',monospace; font-size:0.7rem}
+  .proj-card .pc-meta div span{display:block; opacity:.55; margin-bottom:6px; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase}
+  .proj-card .pc-cta{font-family:'JetBrains Mono',monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.16em; align-self:flex-start; padding:10px 0; position:relative; cursor:none}
+  .proj-card .pc-cta::after{content:" →"; transition:transform .3s; display:inline-block}
+  .proj-card .pc-cta:hover::after{transform:translateX(8px)}
+
+  /* PROJECT MODAL */
+  .modal{position:fixed; inset:0; z-index:300; display:none; align-items:flex-start; justify-content:center; padding:80px 24px; overflow-y:auto}
+  .modal.open{display:flex; animation:mfade .4s ease}
+  @keyframes mfade{from{opacity:0} to{opacity:1}}
+  .modal::before{content:""; position:absolute; inset:0; background:rgba(14,15,12,0.85); backdrop-filter:blur(8px)}
+  .modal-inner{position:relative; max-width:880px; width:100%; background:var(--paper); border:1px solid var(--ink); padding:60px; animation:mslide .5s cubic-bezier(.2,.9,.2,1)}
+  @keyframes mslide{from{transform:translateY(40px); opacity:0} to{transform:translateY(0); opacity:1}}
+  .modal-close{position:absolute; top:18px; right:18px; width:42px; height:42px; border:1px solid var(--ink); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:1rem; transition:background .3s, color .3s}
+  .modal-close:hover{background:var(--ink); color:var(--paper)}
+  .modal-inner .m-eyebrow{font-family:'JetBrains Mono',monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.18em; color:var(--muted); margin-bottom:18px}
+  .modal-inner h3{font-family:'Fraunces',serif; font-size:clamp(2rem,4vw,3rem); font-weight:300; line-height:1.05; letter-spacing:-.02em; margin-bottom:30px}
+  .modal-inner .m-grid{display:grid; grid-template-columns:1fr 1fr; gap:36px; margin-bottom:30px}
+  .modal-inner h4{font-family:'JetBrains Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.18em; color:var(--moss); margin-bottom:10px; font-weight:500}
+  .modal-inner p, .modal-inner li{font-size:0.9rem; line-height:1.7; color:var(--ink-2)}
+  .modal-inner ol, .modal-inner ul{padding-left:18px}
+  .modal-inner .m-tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:8px}
+  .modal-inner .m-tags span{font-family:'JetBrains Mono',monospace; font-size:0.62rem; text-transform:uppercase; letter-spacing:0.12em; border:1px solid var(--ink); padding:5px 10px; transition:all .3s}
+  .modal-inner .m-tags span:hover{background:var(--moss); color:var(--paper); border-color:var(--moss)}
+  .modal-inner .m-impact{margin-top:24px; padding:20px; background:var(--bg); border-left:3px solid var(--moss); font-family:'JetBrains Mono',monospace; font-size:0.78rem; line-height:1.6; color:var(--ink)}
+  @media (max-width:680px){ .modal-inner{padding:40px 24px} .modal-inner .m-grid{grid-template-columns:1fr} }
+
+  /* MANIFESTO / ABOUT */
+  .manifesto{background:var(--ink); color:var(--paper)}
+  .manifesto .sec-head{border-color:var(--paper)}
+  .manifesto .sec-head .num, .manifesto .sec-head .desc{color:#aaa}
+  .manifesto .sec-head h2 i{color:var(--acid)}
+  .manifesto-body{display:grid; grid-template-columns:1fr 1fr; gap:60px}
+  .manifesto-body .big{font-family:'Fraunces',serif; font-weight:200; font-size:clamp(2rem, 3.5vw, 3.2rem); line-height:1.15; letter-spacing:-.02em}
+  .manifesto-body .big em{color:var(--acid); font-style:italic}
+  .manifesto-body .col p{font-size:0.95rem; line-height:1.7; color:#c8c4ba; margin-bottom:18px}
+  .manifesto-body .col .stats{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:32px; padding-top:32px; border-top:1px solid #333}
+  .manifesto-body .col .stats div{font-family:'JetBrains Mono',monospace}
+  .manifesto-body .col .stats span.n{font-family:'Fraunces',serif; font-size:3rem; font-weight:200; color:var(--acid); display:block}
+  .manifesto-body .col .stats span.l{font-size:0.65rem; text-transform:uppercase; letter-spacing:0.16em; color:#888; margin-top:6px; display:block}
+  @media (max-width:880px){ .manifesto-body{grid-template-columns:1fr; gap:40px} }
+
+  /* CONFERENCE */
+  .conf{background:var(--paper)}
+  .conf-card{display:grid; grid-template-columns:auto 1fr auto; gap:60px; padding:48px 0; border-top:2px solid var(--ink); border-bottom:1px solid var(--rule); align-items:center; transition:padding .4s}
+  .conf-card:hover{padding-left:20px; padding-right:20px}
+  .conf-card .date-block{font-family:'Fraunces',serif; font-weight:300; font-size:3rem; line-height:1; letter-spacing:-.02em}
+  .conf-card .date-block small{display:block; font-family:'JetBrains Mono',monospace; font-size:0.65rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); margin-top:8px}
+  .conf-card .conf-info h3{font-family:'Fraunces',serif; font-size:1.8rem; font-weight:400; margin-bottom:8px}
+  .conf-card .conf-info p{font-size:0.9rem; color:var(--ink-2); line-height:1.6}
+  .conf-card .conf-info p.host{font-family:'JetBrains Mono',monospace; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); margin-top:6px}
+  .conf-card .role{font-family:'JetBrains Mono',monospace; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.16em; padding:10px 16px; border:1px solid var(--ink); white-space:nowrap}
+  .conf-quote{margin-top:40px; max-width:760px; font-family:'Fraunces',serif; font-style:italic; font-weight:300; font-size:1.3rem; line-height:1.5; color:var(--ink-2)}
+  @media (max-width:780px){ .conf-card{grid-template-columns:1fr; gap:20px} }
+
+  /* CONTACT */
+  .contact{background:var(--bg)}
+  .contact h2.huge{font-family:'Fraunces',serif; font-size:clamp(3.5rem,11vw,11rem); font-weight:200; line-height:0.9; letter-spacing:-.04em; margin-bottom:60px}
+  .contact h2.huge em{color:var(--moss); font-style:italic; font-weight:300}
+  .contact h2.huge .arrow{display:inline-block; transition:transform .4s; color:var(--rust)}
+  .contact h2.huge:hover .arrow{transform:translateX(20px) rotate(-12deg)}
+  .contact-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:80px; align-items:start}
+  .contact-grid .lead{font-family:'Fraunces',serif; font-style:italic; font-weight:300; font-size:1.4rem; line-height:1.5; max-width:32ch; color:var(--ink-2); margin-bottom:40px}
+  .contact-list a{display:flex; justify-content:space-between; align-items:center; padding:24px 0; border-top:1px solid var(--ink); font-family:'JetBrains Mono',monospace; font-size:0.85rem; transition:padding .3s, color .3s}
+  .contact-list a:last-child{border-bottom:1px solid var(--ink)}
+  .contact-list a span.lbl{text-transform:uppercase; letter-spacing:0.16em; font-size:0.65rem; color:var(--muted); transition:color .3s, transform .3s}
+  .contact-list a:hover{padding-left:14px; color:var(--moss)}
+  .contact-list a:hover span.lbl{color:var(--moss); transform:translateX(-6px)}
+  .contact-list a span.arr{transition:transform .3s}
+  .contact-list a:hover span.arr{transform:translateX(8px)}
+  @media (max-width:780px){ .contact-grid{grid-template-columns:1fr; gap:40px} }
+
+  footer.foot{padding:30px 28px; border-top:1px solid var(--ink); display:flex; justify-content:space-between; flex-wrap:wrap; gap:14px; font-family:'JetBrains Mono',monospace; font-size:0.65rem; text-transform:uppercase; letter-spacing:0.16em; color:var(--muted); position:relative; z-index:2}
+  footer.foot button.audio{cursor:none; padding:6px 12px; border:1px solid var(--muted); transition:all .3s}
+  footer.foot button.audio:hover{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+  footer.foot button.audio.on{background:var(--acid); color:var(--ink); border-color:var(--ink)}
+
+  /* REVEAL */
+  .reveal{opacity:0; transform:translateY(36px); transition:opacity .9s cubic-bezier(.2,.9,.2,1), transform .9s cubic-bezier(.2,.9,.2,1)}
+  .reveal.in{opacity:1; transform:translateY(0)}
+  .reveal.d1{transition-delay:.1s}.reveal.d2{transition-delay:.2s}.reveal.d3{transition-delay:.3s}
+
+  /* Easter egg flash */
+  body.party{animation:party 1.5s linear}
+  @keyframes party{0%{filter:hue-rotate(0)} 100%{filter:hue-rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<canvas id="blob"></canvas>
+<canvas id="grain"></canvas>
+
+<div id="cur"></div>
+<div id="curRing"></div>
+<div id="progress"></div>
+
+<nav class="top">
+  <a href="#top" class="mark">R<b>S</b><i>·</i>studio</a>
+  <div class="links">
+    <a href="#work" data-nav="work">Work</a>
+    <a href="#manifesto" data-nav="manifesto">Manifesto</a>
+    <a href="#conf" data-nav="conf">Field Notes</a>
+    <a href="#contact" data-nav="contact">Contact</a>
+  </div>
+  <div class="clock" id="clock">— : — IST</div>
+</nav>
+
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-top">
+      <div class="meta reveal">
+        <span class="dot"></span>AVAILABLE FOR RESEARCH<br>
+        COLLABORATIONS · 2026<br>
+        BASED IN INDIA · WORKING GLOBALLY
+      </div>
+      <div class="meta reveal d1" style="text-align:right">
+        PORTFOLIO / VOL. 01<br>
+        BIOTECHNOLOGY × SYSTEMS<br>
+        INDEX 001 — 003
+      </div>
+    </div>
+
+    <h1 class="hero-name reveal d1">
+      <span class="l1">Raktima</span>
+      <span class="l2" id="lastname"></span>
+    </h1>
+
+    <div class="hero-bottom">
+      <p class="hero-tag reveal d2">
+        Working at the seam between <em>biological systems</em>, <em>sustainable materials</em>, and <em>digital infrastructure</em> — engineering things that compost, scale, and outlast their press release.
+      </p>
+      <div class="hero-info reveal d2">
+        <h5>Discipline</h5>
+        <p>B.Tech, Biotechnology<br>Sustainable Engineering<br>Digital Innovation</p>
+      </div>
+      <div class="hero-info reveal d3">
+        <h5>Reach</h5>
+        <p>
+          <a href="mailto:raktima.sengupta@email.com">raktima.sengupta@email.com</a><br>
+          <a href="tel:+919932738157">+91 99327 38157</a><br>
+          <a href="https://github.com/Raktimajinniepoint" target="_blank" rel="noopener">github / Raktimajinniepoint</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee">
+  <div class="track">
+    <span>Compost the future</span><span>Engineer the cycle</span><span>Bio meets binary</span><span>Soil · Software · Society</span>
+    <span>Compost the future</span><span>Engineer the cycle</span><span>Bio meets binary</span><span>Soil · Software · Society</span>
+  </div>
+</div>
+
+<!-- WORK -->
+<section id="work">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div>
+        <div class="num">§ 01 / Selected Work</div>
+        <h2>Three <i>experiments</i><br>in motion.</h2>
+      </div>
+      <p class="desc">A handful of projects — each one a small attempt to rewire a broken system. Drag, scroll, tap a card to read the full lab notes.</p>
+    </div>
+
+    <div class="proj-rail-wrap reveal d1">
+      <div class="proj-hint">
+        <span>← drag · scroll · click to expand →</span>
+        <div class="arrows">
+          <button id="prev" aria-label="Previous">←</button>
+          <button id="next" aria-label="Next">→</button>
+        </div>
+      </div>
+      <div class="proj-rail" id="rail">
+
+        <article class="proj-card" data-tone="moss" data-modal="p1">
+          <div class="pc-top">
+            <span class="pc-num">01 / 03</span>
+            <span class="pc-tag">Engineering · Digital</span>
+          </div>
+          <h3>Integrated Digital Ecosystem for <em>Horticulture</em></h3>
+          <p class="pc-desc">A centralized web platform that digitizes the full agricultural lifecycle — fields, finances, and direct buyer markets — with Gemini-powered government scheme matching.</p>
+          <div class="pc-meta">
+            <div><span>Year</span>2024 · Agrithon 2.0</div>
+            <div><span>Stack</span>Django · Gemini · MySQL</div>
+            <div><span>Role</span>Build &amp; AI</div>
+            <div><span>Status</span>Prototype shipped</div>
+          </div>
+          <button class="pc-cta">Read the lab notes</button>
+        </article>
+
+        <article class="proj-card" data-tone="acid" data-modal="p2">
+          <div class="pc-top">
+            <span class="pc-num">02 / 03</span>
+            <span class="pc-tag">Sustainability · Materials</span>
+          </div>
+          <h3>Solar-Powered <em>Bioplastic</em> Conversion</h3>
+          <p class="pc-desc">A zero-fossil-fuel pipeline that turns starch-rich kitchen waste into flexible, translucent bioplastic film — heated by sun, plasticized by glycerol.</p>
+          <div class="pc-meta">
+            <div><span>Yield</span>20 kg → 2 kg / day</div>
+            <div><span>Energy</span>100 % solar</div>
+            <div><span>Process</span>α-amylase · 70–90 °C</div>
+            <div><span>Status</span>Lab validated</div>
+          </div>
+          <button class="pc-cta">Read the lab notes</button>
+        </article>
+
+        <article class="proj-card" data-tone="rust" data-modal="p3">
+          <div class="pc-top">
+            <span class="pc-num">03 / 03</span>
+            <span class="pc-tag">Infrastructure · Materials</span>
+          </div>
+          <h3>Bamboo-Plastic Modular <em>Roads</em></h3>
+          <p class="pc-desc">Prefabricated interlocking road panels for Northeast India's high-rainfall, hilly terrain — a 3-layer composite of recycled plastic, bamboo lattice, and mineral filler.</p>
+          <div class="pc-meta">
+            <div><span>Lifespan</span>10–12 years</div>
+            <div><span>Cost</span>20–30 % cheaper</div>
+            <div><span>Layers</span>Plastic · Bamboo · Filler</div>
+            <div><span>Status</span>Design phase</div>
+          </div>
+          <button class="pc-cta">Read the lab notes</button>
+        </article>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MANIFESTO -->
+<section class="manifesto" id="manifesto">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div>
+        <div class="num">§ 02 / Manifesto</div>
+        <h2>Less spectacle.<br>More <i>circulation</i>.</h2>
+      </div>
+      <p class="desc">A working set of beliefs about what biotech, materials, and software ought to do — and what they ought to refuse.</p>
+    </div>
+
+    <div class="manifesto-body">
+      <p class="big reveal">
+        I treat <em>waste streams</em>, <em>field data</em>, and <em>code</em> as the same kind of raw material — things to be looped back into a system that closes on itself, not opens onto a landfill.
+      </p>
+      <div class="col reveal d1">
+        <p>I'm a B.Tech biotechnologist, but the projects on this page are deliberately interdisciplinary. Some are wet lab. Some are full-stack. Most are both — because the interesting problems don't sit politely inside one syllabus.</p>
+        <p>Every project here begins with a specific failure mode in an existing system: middlemen extracting value from farmers, plastic that no machine wants, bitumen roads dissolving in monsoon. Every solution begins with the question <em>"what's already nearby that we're throwing away?"</em></p>
+        <div class="stats">
+          <div><span class="n" data-count="3">0</span><span class="l">Core Projects</span></div>
+          <div><span class="n" data-count="20" data-suffix="kg">0</span><span class="l">Daily Waste Cycled</span></div>
+          <div><span class="n" data-count="10" data-suffix="yr">0</span><span class="l">Road Lifespan</span></div>
+          <div><span class="n" data-count="1">0</span><span class="l">Conference (so far)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONFERENCE -->
+<section class="conf" id="conf">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <div>
+        <div class="num">§ 03 / Field Notes</div>
+        <h2>Conferences &amp; <i>conversations</i>.</h2>
+      </div>
+      <p class="desc">Where the work meets the wider community of researchers, policymakers, and other stubborn optimists.</p>
+    </div>
+
+    <div class="conf-card reveal">
+      <div class="date-block">10 / 25<small>30–31 October</small></div>
+      <div class="conf-info">
+        <h3>BIOINNOVATE 2025</h3>
+        <p>Bridging Science and Society for Sustainable Development Goals</p>
+        <p class="host">School of Bioengineering &amp; Biosciences · Lovely Professional University</p>
+      </div>
+      <div class="role">Participant</div>
+    </div>
+    <p class="conf-quote reveal d1">"Two days of debating where bioengineering policy meets the UN SDGs — and which of those goals are still treated as optional by industry."</p>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="wrap">
+    <h2 class="huge reveal">Let's build<br>something <em>that</em><br>composts <span class="arrow">↗</span></h2>
+    <div class="contact-grid">
+      <p class="lead reveal">Open to research partnerships, lab collaborations, and roles where biotech, sustainable materials, and digital systems are allowed to share the same table.</p>
+      <div class="contact-list reveal d1">
+        <a href="mailto:raktima.sengupta@email.com"><span class="lbl">Email</span><span>raktima.sengupta@email.com <span class="arr">→</span></span></a>
+        <a href="tel:+919932738157"><span class="lbl">Phone</span><span>+91 99327 38157 <span class="arr">→</span></span></a>
+        <a href="https://linkedin.com/in/raktima-sengupta" target="_blank" rel="noopener"><span class="lbl">LinkedIn</span><span>/in/raktima-sengupta <span class="arr">→</span></span></a>
+        <a href="https://github.com/Raktimajinniepoint" target="_blank" rel="noopener"><span class="lbl">GitHub</span><span>/Raktimajinniepoint <span class="arr">→</span></span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div>© 2025 · Raktima Sengupta · B.Tech Biotechnology</div>
+  <div>Hand-built with HTML, CSS, JS · No frameworks · <button class="audio" id="audioBtn">Sound: off</button></div>
+  <div>Try the <kbd>B</kbd>-<kbd>I</kbd>-<kbd>O</kbd> sequence ✦</div>
+</footer>
+
+<!-- MODALS DATA -->
+<div class="modal" id="modal">
+  <button class="modal-close" id="modalClose">×</button>
+  <div class="modal-inner" id="modalInner"></div>
+</div>
+
+<script>
+/* =========== DATA =========== */
+const PROJECTS={
+  p1:{tag:"Engineering · Digital · 2024",title:"Integrated Digital Ecosystem for Horticulture",problem:"Horticulture farmers faced chronic disadvantages — no data analysis tools, poor financial planning, and market exploitation due to lack of direct buyer access.",solution:"Built a centralized web platform digitizing the full agricultural lifecycle. Farmers log land size, inputs, and expenses. The system auto-calculates profit and loss. A Buyers Portal enables direct farmer-to-buyer transactions, eliminating middlemen and price exploitation.",extraTitle:"AI Layer",extra:"Integrated Google Gemini 1.5 Flash to automatically identify eligible government schemes based on each farmer's land size and crop data.",tags:["Python 3.13","Django","Gemini 1.5 Flash","Tailwind CSS","MySQL"],impact:"IMPACT — Direct farmer-to-buyer pipeline + automated scheme eligibility, removing two layers of intermediation."},
+  p2:{tag:"Sustainability · Materials",title:"Solar-Powered Bioplastic Conversion",problem:"Non-biodegradable plastic pollution and accumulation of starch-rich kitchen waste (potato peels, rice water) with no sustainable disposal pathway.",solution:"Engineered a zero-fossil-fuel process converting kitchen waste into flexible, translucent bioplastic sheets using a solar-powered reactor.",extraTitle:"Methodology",extraList:["Enzymatic pretreatment using α-amylase to reduce starch molecular weight","Slurry heated in solar-powered reactor at 70–90 °C","Glycerol added as plasticizer to improve elasticity"],tags:["α-Amylase","Glycerol","Solar Reactor","Kitchen Waste"],impact:"IMPACT — 20 kg of kitchen waste → 2 kg of bioplastic film daily at community scale, on a 100 % renewable energy cycle."},
+  p3:{tag:"Infrastructure · Materials",title:"Bamboo-Plastic Modular Roads for Northeast India",problem:"Conventional bitumen roads fail rapidly in Northeast India's hilly, high-rainfall terrain. Non-recyclable plastic waste has no scalable exit.",solution:"Designed prefabricated interlocking road panels using a 3-layer composite system. Lightweight, modular — deployable without heavy machinery and replaceable section by section.",extraTitle:"Three-Layer System",extraList:["Surface — Waterproof recycled plastic shell","Core — Tension-absorbing bamboo lattice","Base — Shredded non-recyclable plastic mixed with mineral filler"],tags:["Recycled Plastic","Bamboo Lattice","Mineral Filler","Modular Panels"],impact:"IMPACT — 10–12 year lifespan · 20–30 % cheaper than conventional bitumen · Section-by-section replaceable."}
+};
+
+/* =========== HOVER LETTERS =========== */
+const lname=document.getElementById('lastname');
+"Sengupta".split('').forEach(ch=>{const s=document.createElement('span'); s.textContent=ch; lname.appendChild(s);});
+
+/* =========== CURSOR =========== */
+(function(){
+  if(matchMedia('(pointer:coarse)').matches) return;
+  const c=document.getElementById('cur'), r=document.getElementById('curRing');
+  let mx=0,my=0,rx=0,ry=0;
+  addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;c.style.left=mx+'px';c.style.top=my+'px';});
+  function loop(){rx+=(mx-rx)*0.18; ry+=(my-ry)*0.18; r.style.left=rx+'px'; r.style.top=ry+'px'; requestAnimationFrame(loop);} loop();
+  document.querySelectorAll('a,button,.proj-card,kbd').forEach(el=>{
+    el.addEventListener('mouseenter',()=>document.body.classList.add('hov'));
+    el.addEventListener('mouseleave',()=>document.body.classList.remove('hov'));
+  });
+})();
+
+/* =========== GRAIN =========== */
+(function(){
+  const c=document.getElementById('grain'), x=c.getContext('2d');
+  function size(){ c.width=innerWidth; c.height=innerHeight; }
+  size(); addEventListener('resize',size);
+  function draw(){
+    const id=x.createImageData(c.width,c.height); const d=id.data;
+    for(let i=0;i<d.length;i+=4){ const v=Math.random()*255|0; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255; }
+    x.putImageData(id,0,0);
+  }
+  let t=0; function loop(){ if(t++%3===0) draw(); requestAnimationFrame(loop); } loop();
+})();
+
+/* =========== BLOB (mouse-following gradient on canvas) =========== */
+(function(){
+  const c=document.getElementById('blob'), x=c.getContext('2d');
+  function size(){ c.width=innerWidth; c.height=innerHeight; } size(); addEventListener('resize',size);
+  let mx=innerWidth/2,my=innerHeight/2,bx=mx,by=my;
+  addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+  const cols=['#1F3D2B','#C9F24D','#C44A1A','#5B2A4C'];
+  let ci=0;
+  setInterval(()=>{ci=(ci+1)%cols.length},5000);
+  function loop(){
+    bx+=(mx-bx)*0.04; by+=(my-by)*0.04;
+    x.clearRect(0,0,c.width,c.height);
+    const g=x.createRadialGradient(bx,by,0,bx,by,Math.max(innerWidth,innerHeight)*0.55);
+    g.addColorStop(0, cols[ci]+'33');
+    g.addColorStop(0.4, cols[(ci+1)%cols.length]+'14');
+    g.addColorStop(1,'rgba(239,234,224,0)');
+    x.fillStyle=g; x.fillRect(0,0,c.width,c.height);
+    requestAnimationFrame(loop);
+  } loop();
+})();
+
+/* =========== CLOCK =========== */
+(function(){
+  const el=document.getElementById('clock'); if(!el) return;
+  function tick(){
+    const d=new Date();
+    const ist=new Date(d.getTime()+(330*60*1000+d.getTimezoneOffset()*60*1000));
+    const h=String(ist.getHours()).padStart(2,'0'), m=String(ist.getMinutes()).padStart(2,'0'), s=String(ist.getSeconds()).padStart(2,'0');
+    el.textContent=`${h}:${m}:${s} IST`;
+  } tick(); setInterval(tick,1000);
+})();
+
+/* =========== SCROLL PROGRESS =========== */
+addEventListener('scroll',()=>{
+  const h=document.documentElement; const p=h.scrollTop/(h.scrollHeight-h.clientHeight);
+  document.getElementById('progress').style.width=(p*100)+'%';
+});
+
+/* =========== REVEAL =========== */
+(function(){
+  const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }),{threshold:0.1});
+  document.querySelectorAll('.reveal').forEach(e=>io.observe(e));
+})();
+
+/* =========== COUNT UP =========== */
+(function(){
+  const io=new IntersectionObserver(es=>es.forEach(e=>{
+    if(!e.isIntersecting) return;
+    e.target.querySelectorAll('[data-count]').forEach(n=>{
+      const t=+n.dataset.count, sfx=n.dataset.suffix||'', t0=performance.now(), dur=1400;
+      function f(now){ const p=Math.min(1,(now-t0)/dur), eased=1-Math.pow(1-p,3); n.textContent=Math.round(eased*t)+sfx; if(p<1) requestAnimationFrame(f);}
+      requestAnimationFrame(f);
+    });
+    io.unobserve(e.target);
+  }),{threshold:0.4});
+  document.querySelectorAll('.stats, .hero-bottom').forEach(s=>io.observe(s));
+})();
+
+/* =========== NAV ACTIVE =========== */
+(function(){
+  const links=document.querySelectorAll('nav.top a[data-nav]');
+  const ids=['work','manifesto','conf','contact'];
+  const io=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting) links.forEach(l=>l.classList.toggle('active', l.dataset.nav===e.target.id));
+  }),{threshold:0.35});
+  ids.forEach(id=>{const el=document.getElementById(id); if(el) io.observe(el);});
+})();
+
+/* =========== PROJECT RAIL — drag + arrows =========== */
+(function(){
+  const rail=document.getElementById('rail');
+  let down=false, sx=0, sl=0;
+  rail.addEventListener('mousedown',e=>{down=true; sx=e.pageX; sl=rail.scrollLeft; rail.classList.add('dragging'); document.body.classList.add('drag');});
+  addEventListener('mouseup',()=>{down=false; rail.classList.remove('dragging'); document.body.classList.remove('drag');});
+  addEventListener('mousemove',e=>{ if(!down) return; rail.scrollLeft = sl - (e.pageX - sx); });
+  document.getElementById('next').onclick=()=>rail.scrollBy({left:rail.clientWidth*0.6, behavior:'smooth'});
+  document.getElementById('prev').onclick=()=>rail.scrollBy({left:-rail.clientWidth*0.6, behavior:'smooth'});
+})();
+
+/* =========== MODAL =========== */
+(function(){
+  const m=document.getElementById('modal'), inner=document.getElementById('modalInner');
+  function open(key){
+    const d=PROJECTS[key]; if(!d) return;
+    let html=`<div class="m-eyebrow">${d.tag}</div><h3>${d.title}</h3><div class="m-grid"><div><h4>The Problem</h4><p>${d.problem}</p></div><div><h4>The Solution</h4><p>${d.solution}</p></div><div><h4>${d.extraTitle}</h4>`;
+    if(d.extraList){ html+='<ul>'+d.extraList.map(x=>`<li>${x}</li>`).join('')+'</ul>'; } else { html+=`<p>${d.extra}</p>`; }
+    html+=`</div><div><h4>Stack &amp; Materials</h4><div class="m-tags">${d.tags.map(t=>`<span>${t}</span>`).join('')}</div></div></div><div class="m-impact">${d.impact}</div>`;
+    inner.innerHTML=html; m.classList.add('open'); document.body.style.overflow='hidden';
+  }
+  function close(){ m.classList.remove('open'); document.body.style.overflow=''; }
+  document.querySelectorAll('.proj-card').forEach(c=>c.addEventListener('click',()=>open(c.dataset.modal)));
+  document.getElementById('modalClose').onclick=close;
+  m.addEventListener('click',e=>{ if(e.target===m) close(); });
+  addEventListener('keydown',e=>{ if(e.key==='Escape') close(); });
+})();
+
+/* =========== AUDIO (synth click) =========== */
+(function(){
+  let on=false, ctx=null;
+  const btn=document.getElementById('audioBtn');
+  btn.addEventListener('click',()=>{
+    on=!on; btn.classList.toggle('on',on); btn.textContent='Sound: '+(on?'on':'off');
+    if(on && !ctx) ctx=new (window.AudioContext||window.webkitAudioContext)();
+    if(on) ctx.resume();
+  });
+  function blip(freq=440){
+    if(!on||!ctx) return;
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.frequency.value=freq; o.type='sine';
+    g.gain.value=0.0001; g.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime+0.01); g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.18);
+    o.connect(g).connect(ctx.destination); o.start(); o.stop(ctx.currentTime+0.2);
+  }
+  document.addEventListener('click',e=>{ if(e.target.closest('a,button,.proj-card')) blip(520+Math.random()*220); });
+  document.querySelectorAll('a,button,.proj-card').forEach(el=>el.addEventListener('mouseenter',()=>blip(880)));
+})();
+
+/* =========== EASTER EGG: B I O =========== */
+(function(){
+  const seq=['b','i','o']; let i=0;
+  addEventListener('keydown',e=>{
+    if(e.key.toLowerCase()===seq[i]){ i++; if(i===seq.length){ document.body.classList.add('party'); setTimeout(()=>document.body.classList.remove('party'),1500); i=0; } }
+    else i=0;
+  });
+})();
+
+/* smooth scroll for anchor nav */
+document.querySelectorAll('a[href^="#"]').forEach(a=>{
+  a.addEventListener('click',e=>{
+    const t=document.querySelector(a.getAttribute('href'));
+    if(t){ e.preventDefault(); t.scrollIntoView({behavior:'smooth',block:'start'}); }
+  });
+});
+</script>
+</body>
+</html>
